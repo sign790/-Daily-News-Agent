@@ -1,0 +1,28 @@
+﻿# Secrets and local config
+.env
+.env.*
+!.env.example
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Local/editor files
+.vscode/
+.idea/
+*.log
+.DS_Store
+Thumbs.db
+
+# Codex/local workspace metadata
+.agents/
+.codex/
+
+# Personal scratch files
+你妈了个逼.py
