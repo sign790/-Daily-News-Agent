@@ -41,7 +41,7 @@ NEWS_AGENT_MODEL=gpt-5.4
 NEWS_TIMEZONE=Asia/Shanghai
 NEWS_RUN_TIME=09:00
 
-NEWS_EMAIL_TO=your-receiver@example.com
+NEWS_EMAIL_TO=receiver@example.com, second@example.com
 NEWS_EMAIL_FROM=your-sender@gmail.com
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
@@ -50,7 +50,7 @@ SMTP_PASSWORD=
 SMTP_USE_SSL=false
 ```
 
-不要把 `.env` 上传到 GitHub。仓库里只应该保留 `.env.example`。
+多个收件人可以用英文逗号隔开，例如 `receiver@example.com, second@example.com`。`n`n不要把 `.env` 上传到 GitHub。仓库里只应该保留 `.env.example`。
 
 
 ## 网页界面
@@ -94,6 +94,7 @@ python main.py --schedule
 - 建议使用专门的小号邮箱作为发件人
 - `SMTP_PASSWORD` 使用 Gmail App Password 或邮箱 SMTP 授权码，不要使用主密码
 - `.env`、API key、邮箱授权码不要提交到 GitHub
+
 
 
 
