@@ -13,6 +13,7 @@ jobs:
     timeout-minutes: 20
 
     env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       NEWS_AGENT_MODEL: ${{ vars.NEWS_AGENT_MODEL || 'gpt-5.4' }}
       NEWS_TIMEZONE: ${{ vars.NEWS_TIMEZONE || 'Asia/Shanghai' }}
@@ -56,4 +57,5 @@ jobs:
           exit $missing
 
       - name: Send daily news email
-        run: python main.py
+        run: python main.py --strict
+

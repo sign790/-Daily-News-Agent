@@ -63,7 +63,7 @@ RSS_SOURCES = [
     NewsSource("Bloomberg Markets", "https://feeds.bloomberg.com/markets/news.rss", "markets"),
     NewsSource("Bloomberg Economics", "https://feeds.bloomberg.com/economics/news.rss", "macro"),
     NewsSource("Bloomberg Politics", "https://feeds.bloomberg.com/politics/news.rss", "geopolitics"),
-    NewsSource("CoinDesk", "https://www.coindesk.com/arc/outboundfeeds/rss/", "crypto_policy"),
+    NewsSource("CoinDesk", "https://www.coindesk.com/arc/outboundfeeds/rss", "crypto_policy"),
     NewsSource("The Verge", "https://www.theverge.com/rss/index.xml", "technology"),
 ]
 
@@ -267,25 +267,26 @@ Your job:
 3. The first 5 stories should be the most important global stories overall.
 4. Use the remaining slots to cover the user's priority themes when there is real news.
 5. Remove duplicates and avoid minor stories unless they are unusually important.
-6. Write the briefing in clear Chinese for a busy reader.
-7. Follow the user's email requirements unless they conflict with accuracy or source attribution.
+6. Follow the language requested in the user's email requirements. If the user asks for English, write the entire briefing in English, including headings and labels. If no language is requested, write in Chinese.
+7. Follow the user's email requirements unless they conflict with accuracy or source attribution. Do not override an explicit language request.
 
 Output format:
-标题: 昨日新闻简报
+Use this structure, but translate every heading and label into the requested output language.
 
-一、全球头条
-1. [事件标题]
-- 来源: source name
-- 重要性: one short Chinese sentence
-- 摘要: two to three short Chinese sentences
-- 链接: URL
+[Briefing title]
 
-二、主题重点
-Continue numbering from the global headlines. Group stories under useful section names such as 地缘政治, 科技与AI, 宏观与市场, 加密货币政策, 中国与全球, 体育重大事件, 商业与大公司.
+[Global headlines section]
+1. [Story title]
+- Source: source name
+- Why it matters: one short sentence
+- Summary: two to three short sentences
+- Link: URL
+
+[Topic highlights section]
+Continue numbering from the global headlines. Group stories under useful section names based on the user's priority topics.
 Only include a section if it contains genuinely important news.
 
-End with:
-今日关注:
+End with a watchlist section:
 - 3 to 5 short bullets about what to watch next.
 """
 
@@ -341,7 +342,7 @@ def send_email(config: AppConfig, subject: str, body: str) -> None:
             smtp.send_message(message)
 
 
-async def run_once(config: AppConfig, dry_run: bool) -> None:
+async def run_once(config: AppConfig, dry_run: bool, strict: bool = False) -> None:
     print("[info] Collecting articles...")
     articles = collect_articles(config)
     print(f"[info] Found {len(articles)} candidate articles.")
@@ -365,10 +366,14 @@ async def run_once(config: AppConfig, dry_run: bool) -> None:
     except ValueError as error:
         print(f"[warn] Email was not sent: {error}")
         print("[hint] Add email environment variables, or run with --dry-run while testing.")
+        if strict:
+            raise
         return
     except Exception as error:
         print(f"[warn] Email sending failed: {error}")
         print("[hint] If Gmail port 465 times out, try SMTP_PORT=587 and SMTP_USE_SSL=false.")
+        if strict:
+            raise
         return
 
     print("[info] Email sent.")
@@ -389,7 +394,7 @@ def seconds_until_next_run(config: AppConfig) -> float:
     return (next_run - now).total_seconds()
 
 
-async def run_schedule(config: AppConfig, dry_run: bool) -> None:
+async def run_schedule(config: AppConfig, dry_run: bool, strict: bool = False) -> None:
     print(f"[info] Scheduler started. Daily run time: {config.run_time} {config.timezone}")
 
     while True:
@@ -397,7 +402,7 @@ async def run_schedule(config: AppConfig, dry_run: bool) -> None:
         next_minutes = round(wait_seconds / 60, 1)
         print(f"[info] Waiting {next_minutes} minutes until next run.")
         await asyncio.sleep(wait_seconds)
-        await run_once(config, dry_run=dry_run)
+        await run_once(config, dry_run=dry_run, strict=strict)
         time.sleep(1)
 
 
@@ -413,6 +418,11 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Keep the process running and execute daily at NEWS_RUN_TIME.",
     )
+    parser.add_argument(
+        "--strict",
+        action="store_true",
+        help="Exit with an error if email sending fails. Useful for GitHub Actions.",
+    )
     return parser.parse_args()
 
 
@@ -422,13 +432,16 @@ async def main() -> None:
     config = load_config()
 
     if args.schedule:
-        await run_schedule(config, dry_run=args.dry_run)
+        await run_schedule(config, dry_run=args.dry_run, strict=args.strict)
     else:
-        await run_once(config, dry_run=args.dry_run)
+        await run_once(config, dry_run=args.dry_run, strict=args.strict)
 
 
 if __name__ == "__main__":
     asyncio.run(main())
+
+
+
 
 
 
